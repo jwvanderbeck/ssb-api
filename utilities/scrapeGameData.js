@@ -22,12 +22,13 @@ var	parser = new xml2js.Parser({'mergeAttrs' : true, 'explicitArray' : false}),
 var filesToParse = [];
 
 program
-  .version('0.0.1')
+  .version('0.0.5')
   .option('-s, --submit', 'Submit parsed data to database')
   .option('-w, --write', 'Write .json files for parsed data')
   .option('-i, --input <path>', 'Set the input path for gamedata XML')
   .option('-o, --output [path]', 'Set the output path for any saved .json files')
   .option('-a, --api <url>', 'Set the API root to use for submissions -- Should end in /')
+  .option('-k, --apikey <key>', 'Set the API key to use for submissions')
   .parse(process.argv);
 
   if (program.input === undefined) {
@@ -41,6 +42,11 @@ program
 
   if (program.submit && !program.api) {
   	console.log('API URL is required when the submit option is enabled')
+  	process.exit(1);
+  }
+
+  if (program.submit && !program.apikey) {
+  	console.log('API key is required when the submit option is enabled')
   	process.exit(1);
   }
 
@@ -454,7 +460,7 @@ function parseVehicle(doc, vehicleName) {
 		rest.get(program.api + 'ships/name/' + finalJSON['name']).on('404', function(data, response) {
 			// 404 response from the API means document was not found, so this doesn't already exist.  We need to create it with a POST
 			// console.log('Existing SHIP ' + finalJSON['name'] + ' document not found -- POSTing a new document.')
-			rest.postJson(program.api + 'ships?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.postJson(program.api + 'ships?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.log("\tSuccessfully POSTed new document");
 				// console.log("\t\t" + util.inspect(response.rawEncoded, {depth: null}));
 			}).on('error', function(err, response) {
@@ -467,7 +473,7 @@ function parseVehicle(doc, vehicleName) {
 		}).on('success', function(data, response) {
 			// Success response back means a document with this name is already in the databse, so we use PUT to simply update it with the new data
 			console.log('Existing SHIP ' + finalJSON['name'] + ' already exists -- PUTing an updated document.')
-			rest.putJson(program.api + 'ships?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.putJson(program.api + 'ships?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.log("\tSuccessfully PUT updated document");
 			});
 		}).on('error', function(err, response) {
@@ -1065,7 +1071,7 @@ function parseItem(doc, itemName) {
 		rest.get(program.api + 'items/name/' + finalJSON['name']).on('404', function(data, response) {
 			// 404 response from the API means document was not found, so this doesn't already exist.  We need to create it with a POST
 			console.warn('Existing ITEM ' + finalJSON['name'] + ' document not found -- POSTing a new document.')
-			rest.postJson(program.api + 'items?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.postJson(program.api + 'items?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.warn("\tSuccessfully POSTed new document");
 			}).on('error', function(err, response) {
 					console.error('[ERROR] -- Received an unkown error while POSTing new ITEM ' + finalJSON['name'] + ' document')
@@ -1077,7 +1083,7 @@ function parseItem(doc, itemName) {
 		}).on('success', function(data, response) {
 			// Success response back means a document with this name is already in the databse, so we use PUT to simply update it with the new data
 			console.warn('Existing ITEM ' + finalJSON['name'] + ' already exists -- PUTing an updated document.')
-			rest.putJson(program.api + 'items?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.putJson(program.api + 'items?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.warn("\tSuccessfully PUT updated document");
 			}).on('error', function(err, response){
 				console.error("Error puting");
@@ -1281,7 +1287,7 @@ function parseAmmo(doc, ammoName) {
 		rest.get(program.api + 'ammo/name/' + finalJSON['name']).on('404', function(data, response) {
 			// 404 response from the API means document was not found, so this doesn't already exist.  We need to create it with a POST
 			console.log('Existing AMMO ' + finalJSON['name'] + ' document not found -- POSTing a new document.')
-			rest.postJson(program.api + 'ammo?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.postJson(program.api + 'ammo?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.log("\tSuccessfully POSTed new document");
 			}).on('error', function(err, response) {
 					console.error('[ERROR] -- Received an unkown error while POSTing new AMMO ' + finalJSON['name'] + ' document')
@@ -1293,7 +1299,7 @@ function parseAmmo(doc, ammoName) {
 		}).on('success', function(data, response) {
 			// Success response back means a document with this name is already in the databse, so we use PUT to simply update it with the new data
 			console.log('Existing AMMO ' + finalJSON['name'] + ' already exists -- PUTing an updated document.')
-			rest.putJson(program.api + 'ammo?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.putJson(program.api + 'ammo?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.log("\tSuccessfully PUT updated document");
 			}).on('complete', function(result, response){
 				ProcessNextFile();
@@ -1432,7 +1438,7 @@ function parseMissile(doc, missileName) {
 		rest.get(program.api + 'missiles/name/' + finalJSON['name']).on('404', function(data, response) {
 			// 404 response from the API means document was not found, so this doesn't already exist.  We need to create it with a POST
 			console.log('Existing MISSILE ' + finalJSON['name'] + ' document not found -- POSTing a new document.')
-			rest.postJson(program.api + 'missiles?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.postJson(program.api + 'missiles?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.log("\tSuccessfully POSTed new document");
 			}).on('error', function(err, response) {
 					console.error('[ERROR] -- Received an unkown error while POSTing new MISSILE ' + finalJSON['name'] + ' document')
@@ -1444,7 +1450,7 @@ function parseMissile(doc, missileName) {
 		}).on('success', function(data, response) {
 			// Success response back means a document with this name is already in the databse, so we use PUT to simply update it with the new data
 			console.log('Existing MISSILE ' + finalJSON['name'] + ' already exists -- PUTing an updated document.')
-			rest.putJson(program.api + 'missiles?api_key=971d43e3d3672cb54b8f28cd0b63d153', finalJSON).on('success', function(data, response) {
+			rest.putJson(program.api + 'missiles?api_key=' + program.apikey, finalJSON).on('success', function(data, response) {
 				console.log("\tSuccessfully PUT updated document");
 			}).on('error', function(err, response){
 				console.error("Error puting");
